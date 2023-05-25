@@ -21,9 +21,6 @@ from ikomia import core, dataprocess, utils
 import torch
 import numpy as np
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler, EulerDiscreteScheduler
-import sys
-if int(sys.version_info[1]) >= 10:
-    from xformers.ops import MemoryEfficientAttentionFlashAttentionOp
 
 
 # --------------------
@@ -139,13 +136,6 @@ class InferHfStableDiffusion(core.CWorkflowTask):
 
             # Enable sliced attention computation
             self.pipe.enable_attention_slicing()
-
-            # Memory Efficient Attention and Sliced attention are both enabled
-            # the Memory Efficient Attention is used.
-            if int(sys.version_info[1]) >= 10:
-                if "stabilityai" in param.model_name:
-                    self.pipe.enable_xformers_memory_efficient_attention(attention_op=MemoryEfficientAttentionFlashAttentionOp)
-                    self.pipe.vae.enable_xformers_memory_efficient_attention(attention_op=None)
 
             if param.generator:
                 self.generator = torch.Generator(self.device).manual_seed(int(param.generator))
