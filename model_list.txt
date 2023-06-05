@@ -2,5 +2,5 @@ CompVis/stable-diffusion-v1-4
 runwayml/stable-diffusion-v1-5
 stabilityai/stable-diffusion-2-base
 stabilityai/stable-diffusion-2
-ststabilityai/stable-diffusion-2-1-base
+stabilityai/stable-diffusion-2-1-base
 stabilityai/stable-diffusion-2-1
