@@ -130,6 +130,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             self.pipe = StableDiffusionPipeline.from_pretrained(
                                                     param.model_name,
                                                     torch_dtype=torch_tensor_dtype,
+                                                    use_safetensors=False,
                                                     )
             self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
             self.pipe = self.pipe.to(self.device)
