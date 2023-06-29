@@ -103,11 +103,12 @@ class InferHfStableDiffusion(core.CWorkflowTask):
         # This is handled by the main progress bar of Ikomia application
         return 1
 
-    def check_img_size(self, num):
-        ''' 
-        Check if the image size is a multiple of 8 
+    @staticmethod
+    def check_img_size(num):
+        """
+        Check if the image size is a multiple of 8
         and return the closest multiple of 8
-        '''
+        """
         return num - (num % 8)
     
     def run(self):
@@ -123,10 +124,11 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             self.device = torch.device("cuda") if param.cuda else torch.device("cpu")
             torch_tensor_dtype = torch.float16 if param.cuda else torch.float32
 
-            scheduler = EulerDiscreteScheduler.from_pretrained(
-                                                    param.model_name,
-                                                    subfolder="scheduler"
-                                                    )
+            # scheduler = EulerDiscreteScheduler.from_pretrained(
+            #                                         param.model_name,
+            #                                         subfolder="scheduler"
+            #                                         )
+
             self.pipe = StableDiffusionPipeline.from_pretrained(
                                                     param.model_name,
                                                     torch_dtype=torch_tensor_dtype,
@@ -203,6 +205,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         self.info.repository = "https://github.com/Stability-AI/stablediffusion"
         # Keywords used for search
         self.info.keywords = "stable diffusion,huggingface,Stability-AI,text-to-image,generative"
+
     def create(self, param=None):
         # Create process object
         return InferHfStableDiffusion(self.info.name, param)
