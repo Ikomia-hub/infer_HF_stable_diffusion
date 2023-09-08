@@ -19,10 +19,9 @@
     </a> 
 </p>
 
-This plugin proposes inference for stable diffusion using models from Hugging Face.
+Run stable diffusion models from Hugging Face.
 
-[Insert illustrative image here. Image must be accessible publicly, in algorithm Github repository for example.
-<img src="images/illustration.png"  alt="Illustrative image" width="30%" height="30%">]
+![Astronaute xl](https://raw.githubusercontent.com/Ikomia-hubinfer_hf_stable_diffusion/main/icons/output.png)
 
 ## :rocket: Use with Ikomia API
 
@@ -39,17 +38,20 @@ pip install ikomia
 [Change the sample image URL to fit algorithm purpose]
 
 ```python
-import ikomia
 from ikomia.dataprocess.workflow import Workflow
+from ikomia.utils.displayIO import display
 
 # Init your workflow
 wf = Workflow()
 
 # Add algorithm
-algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=True)
+algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=False)
 
-# Run on your image  
-wf.run_on(url="example_image.png")
+# Run  
+wf.run()
+
+# Display the image
+display(algo.get_output(0).get_image())
 ```
 
 ## :sunny: Use with Ikomia Studio
@@ -62,29 +64,45 @@ Ikomia Studio offers a friendly UI with the same features as the API.
 
 ## :pencil: Set algorithm parameters
 
-[Explain each algorithm parameters]
+- **model_name** (str) - default 'stabilityai/stable-diffusion-2-base': Name of the stable diffusion model. Other model available:
+    - CompVis/stable-diffusion-v1-4
+    - runwayml/stable-diffusion-v1-5
+    - stabilityai/stable-diffusion-2-base
+    - stabilityai/stable-diffusion-2
+    - stabilityai/stable-diffusion-2-1-base
+    - stabilityai/stable-diffusion-2-1
+    - stabilityai/stable-diffusion-xl-base-1.0
+- **prompt** (str): Input prompt.
+- **negative_prompt** (str, *optional*): The prompt not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).
+- **num_inference_steps** (int) - default '50': Number of denoising steps (minimum: 1; maximum: 500).
+- **guidance_scale** (float) - default '7.5': Scale for classifier-free guidance (minimum: 1; maximum: 20).
+- **seed** (int) - default '-1': Seed value. '-1' generates a random number between 0 and 191965535.
 
-[Change the sample image URL to fit algorithm purpose]
 
 ```python
-import ikomia
 from ikomia.dataprocess.workflow import Workflow
+from ikomia.utils.displayIO import display
 
 # Init your workflow
 wf = Workflow()
 
 # Add algorithm
-algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=True)
+algo = wf.add_task(name = "infer_hf_stable_diffusion", auto_connect=False)
 
 algo.set_parameters({
-    "param1": "value1",
-    "param2": "value2",
-    ...
+    'model_name': 'stabilityai/stable-diffusion-xl-base-1.0',
+    'prompt': 'Astronaut on Mars during sunset',
+    'guidance_scale': '7.5',
+    'negative_prompt': 'low resolution',
+    'num_inference_steps': '50',
+    'seed': '1981651'
 })
 
-# Run on your image  
-wf.run_on(url="example_image.png")
+# Run directly on your image
+wf.run()
 
+# Display the image
+display(algo.get_output(0).get_image())
 ```
 
 ## :mag: Explore algorithm outputs
@@ -99,10 +117,10 @@ from ikomia.dataprocess.workflow import Workflow
 wf = Workflow()
 
 # Add algorithm
-algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=True)
+algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=False)
 
-# Run on your image  
-wf.run_on(url="example_image.png")
+# Run 
+wf.run()
 
 # Iterate over outputs
 for output in algo.get_outputs()
@@ -111,7 +129,3 @@ for output in algo.get_outputs()
     # Export it to JSON
     output.to_json()
 ```
-
-## :fast_forward: Advanced usage 
-
-[optional]
