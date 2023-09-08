@@ -20,7 +20,9 @@ import copy
 from ikomia import core, dataprocess, utils
 import torch
 import numpy as np
-from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler, EulerDiscreteScheduler
+import random
+import sys
+from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 
 
 # --------------------
@@ -33,15 +35,13 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         core.CWorkflowTaskParam.__init__(self)
         # Place default value initialization here
         self.model_name = "stabilityai/stable-diffusion-2-base"
-        self.prompt = "a photo of an astronaut riding a horse on mars"
+        self.prompt = "Astronaut on Mars during sunset"
         self.cuda = torch.cuda.is_available()
         self.guidance_scale = 7.5
-        self.height = 512
-        self.width = 512
-        self.num_images_per_prompt = 1
         self.negative_prompt = ""
-        self.generator = ""
         self.num_inference_steps = 50
+        self.seed = -1
+        # self.use_refiner = False # REFINER DOESN'T WORK ON PYTORCH <2.0
         self.update = False
 
     def set_values(self, param_map):
@@ -51,12 +51,10 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         self.prompt = param_map["prompt"]
         self.cuda = utils.strtobool(param_map["cuda"])
         self.guidance_scale = float(param_map["guidance_scale"])
-        self.height = int(param_map["height"])
-        self.width = int(param_map["width"])
-        self.num_images_per_prompt = int(param_map["num_images_per_prompt"])
         self.negative_prompt = param_map["negative_prompt"]
-        self.generator = param_map["generator"]
+        self.seed = int(param_map["seed"])
         self.num_inference_steps = int(param_map["num_inference_steps"])
+        # self.use_refiner = utils.strtobool(param_map["use_refiner"])
         self.update = True
 
     def get_values(self):
@@ -67,12 +65,10 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         param_map["prompt"] = str(self.prompt)
         param_map["cuda"] = str(self.cuda)
         param_map["guidance_scale"] = str(self.guidance_scale)
-        param_map["height"] = str(self.height)
-        param_map["width"] = str(self.width)
-        param_map["num_images_per_prompt"] = str(self.num_images_per_prompt)
         param_map["negative_prompt"] = str(self.negative_prompt)
-        param_map["generator"] = str(self.generator)
         param_map["num_inference_steps"] = str(self.num_inference_steps)
+        param_map["seed"] = str(self.seed)
+        # param_map["use_refiner"] = str(self.use_refiner)
         return param_map
 
 # --------------------
@@ -95,21 +91,13 @@ class InferHfStableDiffusion(core.CWorkflowTask):
         self.device = torch.device("cpu")
         self.pipe = None
         self.generator = None
-        self.height = 512
-        self.width = 512
+        self.seed = None
 
     def get_progress_steps(self):
         # Function returning the number of progress steps for this process
         # This is handled by the main progress bar of Ikomia application
         return 1
 
-    @staticmethod
-    def check_img_size(num):
-        """
-        Check if the image size is a multiple of 8
-        and return the closest multiple of 8
-        """
-        return num - (num % 8)
     
     def run(self):
         # Core function of your process
@@ -124,51 +112,86 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             self.device = torch.device("cuda") if param.cuda else torch.device("cpu")
             torch_tensor_dtype = torch.float16 if param.cuda else torch.float32
 
-            # scheduler = EulerDiscreteScheduler.from_pretrained(
-            #                                         param.model_name,
-            #                                         subfolder="scheduler"
-            #                                         )
+            if param.seed == -1:
+                self.seed = random.randint(0, 191965535)
+            else:
+                self.seed = param.seed
 
-            self.pipe = StableDiffusionPipeline.from_pretrained(
-                                                    param.model_name,
-                                                    torch_dtype=torch_tensor_dtype,
-                                                    use_safetensors=False,
-                                                    )
-            self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
-            self.pipe = self.pipe.to(self.device)
+            self.generator = torch.Generator(self.device).manual_seed(param.seed)
 
-            # Enable sliced attention computation
-            self.pipe.enable_attention_slicing()
+            # Load models for the XL version
+            if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
+                self.pipe = DiffusionPipeline.from_pretrained(
+                    "stabilityai/stable-diffusion-xl-base-1.0",
+                    cache_dir = "models",
+                    torch_dtype=torch.float16,
+                    use_safetensors=True,
+                    variant="fp16",
+                    )
 
-            if param.generator:
-                self.generator = torch.Generator(self.device).manual_seed(int(param.generator))
+                # if param.use_refiner:
+                #     refiner = DiffusionPipeline.from_pretrained(
+                #         "stabilityai/stable-diffusion-xl-refiner-1.0",
+                #         text_encoder_2=self.pipe.text_encoder_2,
+                #         vae=self.pipe.vae,
+                #         torch_dtype=torch.float16,
+                #         use_safetensors=True,
+                #         variant="fp16",
+                #     )
 
-        # Check if image size
-        self.height = self.check_img_size(param.height)
-        self.width = self.check_img_size(param.width)
+                #     refiner = refiner.to(self.device)
+                #     self.pipe.enable_model_cpu_offload()
+                # else:
+                self.pipe = self.pipe.to(self.device)
 
-        # Inference
-        results = self.pipe(
-                        param.prompt,
-                        guidance_scale = param.guidance_scale,
-                        height = self.height,
-                        width = self.width,
-                        num_images_per_prompt = param.num_images_per_prompt,
-                        negative_prompt = param.negative_prompt,
+            else:
+                self.pipe = DiffusionPipeline.from_pretrained(
+                                                        param.model_name,
+                                                        torch_dtype=torch_tensor_dtype,
+                                                        use_safetensors=False,
+                                                        )
+
+                self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
+                self.pipe = self.pipe.to(self.device)
+
+                # Enable sliced attention computation
+                self.pipe.enable_attention_slicing()
+
+
+        if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
+            # Inference xl
+            result = self.pipe(
+                        prompt = param.prompt,
+                        output_type = "pil",
+                        # output_type = "latent" if param.use_refiner else "pil",
                         generator = self.generator,
+                        guidance_scale = param.guidance_scale,
+                        negative_prompt = param.negative_prompt,
                         num_inference_steps = param.num_inference_steps,
                         ).images
 
-        if len(results) > 1:
-            for i, image in enumerate(results):
-                self.add_output(dataprocess.CImageIO())
-                img = np.array(image)
-                output = self.get_output(i)
-                output.set_image(img)
+            # if param.use_refiner:
+            #     result = refiner(
+            #         prompt = param.prompt,
+            #         image = result,
+            #         ).images
         else:
-            image = np.array(results[0])
-            output_img = self.get_output(0)
-            output_img.set_image(image)
+            # Inference
+            result = self.pipe(
+                            param.prompt,
+                            guidance_scale = param.guidance_scale,
+                            negative_prompt = param.negative_prompt,
+                            generator = self.generator,
+                            num_inference_steps = param.num_inference_steps,
+                            ).images
+
+        
+        print(f"Prompt:\t{param.prompt}\nSeed:\t{self.seed}")
+
+        # Get and display output 
+        image = np.array(result[0])
+        output_img = self.get_output(0)
+        output_img.set_image(image)
 
         # Step progress bar (Ikomia Studio):
         self.emit_step_progress()
@@ -192,7 +215,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
                                 "using models from Hugging Face."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Diffusion"
-        self.info.version = "1.0.0"
+        self.info.version = "1.1.0"
         self.info.icon_path = "icons/icon.png"
         self.info.authors = "Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, Björn Ommer."
         self.info.article = "High-Resolution Image Synthesis with Latent Diffusion Models"

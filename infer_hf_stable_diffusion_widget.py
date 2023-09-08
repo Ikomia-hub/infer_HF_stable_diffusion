@@ -90,35 +90,12 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
                                                     self.parameters.negative_prompt
                                                     )
 
-        # Height
-        self.spin_height = pyqtutils.append_spin(
-                                            self.grid_layout,
-                                            "Image height",
-                                            self.parameters.height,
-                                            min=1,
-                                            )
 
-        # Height
-        self.spin_width = pyqtutils.append_spin(
-                                            self.grid_layout,
-                                            "Image width",
-                                            self.parameters.width,
-                                            min=1,
-                                            )     
-    
-        # Number of images per prompt
-        self.num_images_per_prompt = pyqtutils.append_spin(
-                                                    self.grid_layout,
-                                                    "Number of images per prompt",
-                                                    self.parameters.num_images_per_prompt,
-                                                    min=1,
-                                                    )
-        # Generator
-        self.edit_generator = pyqtutils.append_edit(
-                                                self.grid_layout,
-                                                "Generator",
-                                                self.parameters.negative_prompt
-                                                )
+        # Refiner
+        # self.check_use_refiner = pyqtutils.append_check(self.grid_layout,
+        #                                          "Use refiner",
+        #                                          self.parameters.use_refiner)
+        
 
         # Link of some available models
         urlLink = "<a href=\"https://huggingface.co/docs/diffusers/main/en/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline\">"\
@@ -138,10 +115,8 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
         self.parameters.num_inference_steps = self.spin_number_of_steps.value()
         self.parameters.guidance_scale = self.spin_guidance_scale.value()
         self.parameters.negative_prompt = self.edit_negative_prompt.text()
-        self.parameters.num_images_per_prompt = self.num_images_per_prompt.value()
-        self.parameters.height = self.spin_height.value()
-        self.parameters.width = self.spin_width.value()
         self.parameters.cuda = self.check_cuda.isChecked()
+        # self.parameters.use_refiner = self.check_use_refiner.isChecked()
 
         # Send signal to launch the process
         self.emit_apply(self.parameters)
