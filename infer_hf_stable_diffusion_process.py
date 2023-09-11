@@ -227,7 +227,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         # Code source repository
         self.info.repository = "https://github.com/Stability-AI/stablediffusion"
         # Keywords used for search
-        self.info.keywords = "stable diffusion,huggingface,Stability-AI,text-to-image,generative"
+        self.info.keywords = "Stable Diffusion, Hugging Face, Stability-AI,text-to-image, Generative"
 
     def create(self, param=None):
         # Create process object
