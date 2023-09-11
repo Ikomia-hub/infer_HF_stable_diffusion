@@ -121,7 +121,7 @@ algo = wf.add_task(name="infer_hf_stable_diffusion", auto_connect=False)
 wf.run()
 
 # Iterate over outputs
-for output in algo.get_outputs()
+for output in algo.get_outputs():
     # Print information
     print(output)
     # Export it to JSON
