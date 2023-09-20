@@ -23,6 +23,7 @@ import numpy as np
 import random
 import sys
 from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
+import os
 
 
 # --------------------
@@ -92,6 +93,8 @@ class InferHfStableDiffusion(core.CWorkflowTask):
         self.pipe = None
         self.generator = None
         self.seed = None
+        self.model_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "weights")
+
 
     def get_progress_steps(self):
         # Function returning the number of progress steps for this process
@@ -123,10 +126,10 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
                 self.pipe = DiffusionPipeline.from_pretrained(
                     "stabilityai/stable-diffusion-xl-base-1.0",
-                    cache_dir = "models",
                     torch_dtype=torch.float16,
                     use_safetensors=True,
                     variant="fp16",
+                    cache_dir=self.model_folder
                     )
 
                 # if param.use_refiner:
@@ -149,6 +152,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                                                         param.model_name,
                                                         torch_dtype=torch_tensor_dtype,
                                                         use_safetensors=False,
+                                                        cache_dir=self.model_folder
                                                         )
 
                 self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
