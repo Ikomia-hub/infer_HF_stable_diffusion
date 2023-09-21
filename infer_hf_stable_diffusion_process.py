@@ -124,14 +124,24 @@ class InferHfStableDiffusion(core.CWorkflowTask):
 
             # Load models for the XL version
             if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
-                self.pipe = DiffusionPipeline.from_pretrained(
-                    "stabilityai/stable-diffusion-xl-base-1.0",
-                    torch_dtype=torch.float16,
-                    use_safetensors=True,
-                    variant="fp16",
-                    cache_dir=self.model_folder
-                    )
-
+                try: 
+                    self.pipe = DiffusionPipeline.from_pretrained(
+                        "stabilityai/stable-diffusion-xl-base-1.0",
+                        torch_dtype=torch.float16,
+                        use_safetensors=True,
+                        variant="fp16",
+                        cache_dir=self.model_folder,
+                        local_files_only=True
+                        )
+                except Exception as e:
+                    print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
+                    self.pipe = DiffusionPipeline.from_pretrained(
+                        "stabilityai/stable-diffusion-xl-base-1.0",
+                        torch_dtype=torch.float16,
+                        use_safetensors=True,
+                        variant="fp16",
+                        cache_dir=self.model_folder
+                    )    
                 # if param.use_refiner:
                 #     refiner = DiffusionPipeline.from_pretrained(
                 #         "stabilityai/stable-diffusion-xl-refiner-1.0",
@@ -148,12 +158,22 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 self.pipe = self.pipe.to(self.device)
 
             else:
-                self.pipe = DiffusionPipeline.from_pretrained(
-                                                        param.model_name,
-                                                        torch_dtype=torch_tensor_dtype,
-                                                        use_safetensors=False,
-                                                        cache_dir=self.model_folder
-                                                        )
+                try:
+                    self.pipe = DiffusionPipeline.from_pretrained(
+                                    param.model_name,
+                                    torch_dtype=torch_tensor_dtype,
+                                    use_safetensors=False,
+                                    cache_dir=self.model_folder,
+                                    local_files_only=True
+                    )
+                except Exception as e:
+                    print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
+                    self.pipe = DiffusionPipeline.from_pretrained(
+                                    param.model_name,
+                                    torch_dtype=torch_tensor_dtype,
+                                    use_safetensors=False,
+                                    cache_dir=self.model_folder
+                    )                                  
 
                 self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
                 self.pipe = self.pipe.to(self.device)
