@@ -251,6 +251,8 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         self.info.original_repository = "https://github.com/Stability-AI/stablediffusion"
         # Keywords used for search
         self.info.keywords = "Stable Diffusion, Hugging Face, Stability-AI,text-to-image, Generative"
+        self.info.algo_type = core.AlgoType.INFER
+        self.info.algo_tasks = "IMAGE_GENERATION"
 
     def create(self, param=None):
         # Create process object
