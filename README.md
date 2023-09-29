@@ -21,7 +21,7 @@
 
 Run stable diffusion models from Hugging Face.
 
-![Astronaute xl](https://raw.githubusercontent.com/Ikomia-hubinfer_hf_stable_diffusion/main/icons/output.png)
+![Astronaute xl](https://raw.githubusercontent.com/Ikomia-hub/infer_hf_stable_diffusion/main/icons/output.png)
 
 ## :rocket: Use with Ikomia API
 
