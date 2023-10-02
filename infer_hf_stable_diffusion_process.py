@@ -112,8 +112,8 @@ class InferHfStableDiffusion(core.CWorkflowTask):
 
         # Load pipeline
         if param.update or self.pipe is None:
-            self.device = torch.device("cuda") if param.cuda else torch.device("cpu")
-            torch_tensor_dtype = torch.float16 if param.cuda else torch.float32
+            self.device = torch.device("cuda") if param.cuda and torch.cuda.is_available() else torch.device("cpu")
+            torch_tensor_dtype = torch.float16 if param.cuda and torch.cuda.is_available() else torch.float32
 
             if param.seed == -1:
                 self.seed = random.randint(0, 191965535)
@@ -127,7 +127,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 try: 
                     self.pipe = DiffusionPipeline.from_pretrained(
                         "stabilityai/stable-diffusion-xl-base-1.0",
-                        torch_dtype=torch.float16,
+                        torch_dtype=torch_tensor_dtype,
                         use_safetensors=True,
                         variant="fp16",
                         cache_dir=self.model_folder,
@@ -137,7 +137,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                     print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
                     self.pipe = DiffusionPipeline.from_pretrained(
                         "stabilityai/stable-diffusion-xl-base-1.0",
-                        torch_dtype=torch.float16,
+                        torch_dtype=torch_tensor_dtype,
                         use_safetensors=True,
                         variant="fp16",
                         cache_dir=self.model_folder
