@@ -211,7 +211,6 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                                 num_inference_steps = param.num_inference_steps,
                                 ).images
 
-        
         print(f"Prompt:\t{param.prompt}\nSeed:\t{self.seed}")
 
         # Get and display output 
@@ -239,7 +238,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         self.info.short_description = "Stable diffusion models from Hugging Face."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Diffusion"
-        self.info.version = "1.1.0"
+        self.info.version = "1.1.1"
         self.info.icon_path = "icons/icon.png"
         self.info.authors = "Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, Björn Ommer."
         self.info.article = "High-Resolution Image Synthesis with Latent Diffusion Models"
