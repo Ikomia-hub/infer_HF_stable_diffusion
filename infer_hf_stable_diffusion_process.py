@@ -184,15 +184,16 @@ class InferHfStableDiffusion(core.CWorkflowTask):
 
         if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
             # Inference xl
-            result = self.pipe(
-                        prompt = param.prompt,
-                        output_type = "pil",
-                        # output_type = "latent" if param.use_refiner else "pil",
-                        generator = self.generator,
-                        guidance_scale = param.guidance_scale,
-                        negative_prompt = param.negative_prompt,
-                        num_inference_steps = param.num_inference_steps,
-                        ).images
+            with torch.no_grad():
+                result = self.pipe(
+                            prompt = param.prompt,
+                            output_type = "pil",
+                            # output_type = "latent" if param.use_refiner else "pil",
+                            generator = self.generator,
+                            guidance_scale = param.guidance_scale,
+                            negative_prompt = param.negative_prompt,
+                            num_inference_steps = param.num_inference_steps,
+                            ).images
 
             # if param.use_refiner:
             #     result = refiner(
@@ -201,13 +202,14 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             #         ).images
         else:
             # Inference
-            result = self.pipe(
-                            param.prompt,
-                            guidance_scale = param.guidance_scale,
-                            negative_prompt = param.negative_prompt,
-                            generator = self.generator,
-                            num_inference_steps = param.num_inference_steps,
-                            ).images
+            with torch.no_grad():
+                result = self.pipe(
+                                param.prompt,
+                                guidance_scale = param.guidance_scale,
+                                negative_prompt = param.negative_prompt,
+                                generator = self.generator,
+                                num_inference_steps = param.num_inference_steps,
+                                ).images
 
         
         print(f"Prompt:\t{param.prompt}\nSeed:\t{self.seed}")
