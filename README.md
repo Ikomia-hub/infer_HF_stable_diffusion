@@ -75,6 +75,7 @@ Ikomia Studio offers a friendly UI with the same features as the API.
 - **num_inference_steps** (int) - default '50': Number of denoising steps (minimum: 1; maximum: 500).
 - **guidance_scale** (float) - default '7.5': Scale for classifier-free guidance (minimum: 1; maximum: 20).
 - **seed** (int) - default '-1': Seed value. '-1' generates a random number between 0 and 191965535.
+- **use_refiner** (bool) - default 'False': Further process the output of the base model (xl-base-1.0 only) with a refinement model specialized for the final denoising steps. 
 
 
 ```python
@@ -93,7 +94,8 @@ algo.set_parameters({
     'guidance_scale': '7.5',
     'negative_prompt': 'low resolution',
     'num_inference_steps': '50',
-    'seed': '1981651'
+    'seed': '1981651',
+    'use_refiner': 'False'
 })
 
 # Run directly on your image

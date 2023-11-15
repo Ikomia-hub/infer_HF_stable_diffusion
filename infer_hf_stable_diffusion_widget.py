@@ -92,10 +92,9 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
 
 
         # Refiner
-        # self.check_use_refiner = pyqtutils.append_check(self.grid_layout,
-        #                                          "Use refiner",
-        #                                          self.parameters.use_refiner)
-        
+        self.check_use_refiner = pyqtutils.append_check(self.grid_layout,
+                                                 "Use refiner (xl-base-1.0)",
+                                                 self.parameters.use_refiner)
 
         # Link of some available models
         urlLink = "<a href=\"https://huggingface.co/docs/diffusers/main/en/api/pipelines/stable_diffusion/text2img#diffusers.StableDiffusionPipeline\">"\
@@ -116,7 +115,7 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
         self.parameters.guidance_scale = self.spin_guidance_scale.value()
         self.parameters.negative_prompt = self.edit_negative_prompt.text()
         self.parameters.cuda = self.check_cuda.isChecked()
-        # self.parameters.use_refiner = self.check_use_refiner.isChecked()
+        self.parameters.use_refiner = self.check_use_refiner.isChecked()
 
         # Send signal to launch the process
         self.emit_apply(self.parameters)

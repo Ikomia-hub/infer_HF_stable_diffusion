@@ -21,7 +21,6 @@ from ikomia import core, dataprocess, utils
 import torch
 import numpy as np
 import random
-import sys
 from diffusers import DiffusionPipeline, DPMSolverMultistepScheduler
 import os
 
@@ -42,7 +41,7 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         self.negative_prompt = ""
         self.num_inference_steps = 50
         self.seed = -1
-        # self.use_refiner = False # REFINER DOESN'T WORK ON PYTORCH <2.0
+        self.use_refiner = False
         self.update = False
 
     def set_values(self, param_map):
@@ -55,7 +54,7 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         self.negative_prompt = param_map["negative_prompt"]
         self.seed = int(param_map["seed"])
         self.num_inference_steps = int(param_map["num_inference_steps"])
-        # self.use_refiner = utils.strtobool(param_map["use_refiner"])
+        self.use_refiner = utils.strtobool(param_map["use_refiner"])
         self.update = True
 
     def get_values(self):
@@ -69,7 +68,7 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         param_map["negative_prompt"] = str(self.negative_prompt)
         param_map["num_inference_steps"] = str(self.num_inference_steps)
         param_map["seed"] = str(self.seed)
-        # param_map["use_refiner"] = str(self.use_refiner)
+        param_map["use_refiner"] = str(self.use_refiner)
         return param_map
 
 # --------------------
@@ -101,7 +100,6 @@ class InferHfStableDiffusion(core.CWorkflowTask):
         # This is handled by the main progress bar of Ikomia application
         return 1
 
-    
     def run(self):
         # Core function of your process
         # Call begin_task_run() for initialization
@@ -142,20 +140,20 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                         variant="fp16",
                         cache_dir=self.model_folder
                     )    
-                # if param.use_refiner:
-                #     refiner = DiffusionPipeline.from_pretrained(
-                #         "stabilityai/stable-diffusion-xl-refiner-1.0",
-                #         text_encoder_2=self.pipe.text_encoder_2,
-                #         vae=self.pipe.vae,
-                #         torch_dtype=torch.float16,
-                #         use_safetensors=True,
-                #         variant="fp16",
-                #     )
+                if param.use_refiner:
+                    refiner = DiffusionPipeline.from_pretrained(
+                        "stabilityai/stable-diffusion-xl-refiner-1.0",
+                        text_encoder_2=self.pipe.text_encoder_2,
+                        vae=self.pipe.vae,
+                        torch_dtype=torch.float16,
+                        use_safetensors=True,
+                        variant="fp16",
+                    )
 
-                #     refiner = refiner.to(self.device)
-                #     self.pipe.enable_model_cpu_offload()
-                # else:
-                self.pipe = self.pipe.to(self.device)
+                    refiner = refiner.to(self.device)
+                    self.pipe.enable_model_cpu_offload()
+                else:
+                    self.pipe = self.pipe.to(self.device)
 
             else:
                 try:
@@ -173,7 +171,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                                     torch_dtype=torch_tensor_dtype,
                                     use_safetensors=False,
                                     cache_dir=self.model_folder
-                    )                                  
+                    )                            
 
                 self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
                 self.pipe = self.pipe.to(self.device)
@@ -181,10 +179,9 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 # Enable sliced attention computation
                 self.pipe.enable_attention_slicing()
 
-
-        if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
-            # Inference xl
-            with torch.no_grad():
+        with torch.no_grad():
+            if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
+                # Inference xl
                 result = self.pipe(
                             prompt = param.prompt,
                             output_type = "pil",
@@ -195,14 +192,13 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                             num_inference_steps = param.num_inference_steps,
                             ).images
 
-            # if param.use_refiner:
-            #     result = refiner(
-            #         prompt = param.prompt,
-            #         image = result,
-            #         ).images
-        else:
-            # Inference
-            with torch.no_grad():
+                if param.use_refiner:
+                    result = refiner(
+                        prompt = param.prompt,
+                        image = result,
+                        ).images
+            else:
+                # Inference
                 result = self.pipe(
                                 param.prompt,
                                 guidance_scale = param.guidance_scale,
