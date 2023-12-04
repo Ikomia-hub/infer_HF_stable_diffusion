@@ -70,12 +70,13 @@ Ikomia Studio offers a friendly UI with the same features as the API.
     - stabilityai/stable-diffusion-2-1-base
     - stabilityai/stable-diffusion-2-1
     - stabilityai/stable-diffusion-xl-base-1.0
+    - stabilityai/sdxl-turbo
 - **prompt** (str): Input prompt.
 - **negative_prompt** (str, *optional*): The prompt not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).
 - **num_inference_steps** (int) - default '50': Number of denoising steps (minimum: 1; maximum: 500).
 - **guidance_scale** (float) - default '7.5': Scale for classifier-free guidance (minimum: 1; maximum: 20).
 - **seed** (int) - default '-1': Seed value. '-1' generates a random number between 0 and 191965535.
-- **use_refiner** (bool) - default 'False': Further process the output of the base model (xl-base-1.0 only) with a refinement model specialized for the final denoising steps. 
+- **use_refiner** (bool) - default 'False': Further process the output of the base model (SDXL) with a refinement model specialized for the final denoising steps. 
 
 
 ```python

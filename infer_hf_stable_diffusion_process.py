@@ -93,6 +93,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
         self.generator = None
         self.seed = None
         self.model_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "weights")
+        self.xl_models = ["stabilityai/sdxl-turbo", "stabilityai/stable-diffusion-xl-base-1.0"]
 
 
     def get_progress_steps(self):
@@ -121,10 +122,10 @@ class InferHfStableDiffusion(core.CWorkflowTask):
             self.generator = torch.Generator(self.device).manual_seed(param.seed)
 
             # Load models for the XL version
-            if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
-                try: 
+            if param.model_name in self.xl_models:
+                try:
                     self.pipe = DiffusionPipeline.from_pretrained(
-                        "stabilityai/stable-diffusion-xl-base-1.0",
+                        param.model_name,
                         torch_dtype=torch_tensor_dtype,
                         use_safetensors=True,
                         variant="fp16",
@@ -134,7 +135,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 except Exception as e:
                     print(f"Failed with error: {e}. Trying without the local_files_only parameter...")
                     self.pipe = DiffusionPipeline.from_pretrained(
-                        "stabilityai/stable-diffusion-xl-base-1.0",
+                        param.model_name,
                         torch_dtype=torch_tensor_dtype,
                         use_safetensors=True,
                         variant="fp16",
@@ -171,7 +172,7 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                                     torch_dtype=torch_tensor_dtype,
                                     use_safetensors=False,
                                     cache_dir=self.model_folder
-                    )                            
+                    )
 
                 self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(self.pipe.scheduler.config)
                 self.pipe = self.pipe.to(self.device)
@@ -180,8 +181,10 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 self.pipe.enable_attention_slicing()
 
         with torch.no_grad():
-            if param.model_name == "stabilityai/stable-diffusion-xl-base-1.0":
+            if param.model_name in self.xl_models:
                 # Inference xl
+                if param.model_name == 'stabilityai/sdxl-turbo':
+                  param.guidance_scale = 0.0
                 result = self.pipe(
                             prompt = param.prompt,
                             output_type = "pil",
@@ -234,7 +237,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         self.info.short_description = "Stable diffusion models from Hugging Face."
         # relative path -> as displayed in Ikomia application process tree
         self.info.path = "Plugins/Python/Diffusion"
-        self.info.version = "1.2.1"
+        self.info.version = "1.3.1"
         self.info.icon_path = "icons/icon.png"
         self.info.authors = "Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, Björn Ommer."
         self.info.article = "High-Resolution Image Synthesis with Latent Diffusion Models"

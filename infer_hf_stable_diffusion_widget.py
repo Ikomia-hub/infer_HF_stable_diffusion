@@ -93,7 +93,7 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
 
         # Refiner
         self.check_use_refiner = pyqtutils.append_check(self.grid_layout,
-                                                 "Use refiner (xl-base-1.0)",
+                                                 "Use refiner (SDXL)",
                                                  self.parameters.use_refiner)
 
         # Link of some available models
