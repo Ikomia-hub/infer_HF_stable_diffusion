@@ -247,7 +247,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         # URL of documentation
         self.info.documentation_link = "https://arxiv.org/pdf/2112.10752.pdf"
         # Code source repository
-        self.info.repository = "https://github.com/Ikomia-hub/infer_hf_stable_diffusionn"
+        self.info.repository = "https://github.com/Ikomia-hub/infer_hf_stable_diffusion"
         self.info.original_repository = "https://github.com/Stability-AI/stablediffusion"
         # Keywords used for search
         self.info.keywords = "Stable Diffusion, Hugging Face, Stability-AI,text-to-image, Generative"
