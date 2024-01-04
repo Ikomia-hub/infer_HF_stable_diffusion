@@ -241,6 +241,7 @@ class InferHfStableDiffusionFactory(dataprocess.CTaskFactory):
         self.info.icon_path = "icons/icon.png"
         self.info.authors = "Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, Björn Ommer."
         self.info.article = "High-Resolution Image Synthesis with Latent Diffusion Models"
+        self.info.article_url = "https://arxiv.org/pdf/2112.10752.pdf"
         self.info.journal = "arXiv"
         self.info.year = 2021
         self.info.license = "MIT License"
