@@ -90,6 +90,22 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
                                                     self.parameters.negative_prompt
                                                     )
 
+        # Output width
+        self.spin_width = pyqtutils.append_spin(
+                                            self.grid_layout, 
+                                            "Output width", 
+                                            self.parameters.width, 
+                                            min=256, step=8
+                                            )
+
+        # Output height
+        self.spin_height = pyqtutils.append_spin(
+                                            self.grid_layout,
+                                            "Output height",
+                                            self.parameters.height,
+                                            min=256,
+                                            step=8
+                                            )
 
         # Refiner
         self.check_use_refiner = pyqtutils.append_check(self.grid_layout,
@@ -115,6 +131,8 @@ class InferHfStableDiffusionWidget(core.CWorkflowTaskWidget):
         self.parameters.guidance_scale = self.spin_guidance_scale.value()
         self.parameters.negative_prompt = self.edit_negative_prompt.text()
         self.parameters.cuda = self.check_cuda.isChecked()
+        self.parameters.width = self.spin_width.value()
+        self.parameters.height = self.spin_height.value()
         self.parameters.use_refiner = self.check_use_refiner.isChecked()
 
         # Send signal to launch the process

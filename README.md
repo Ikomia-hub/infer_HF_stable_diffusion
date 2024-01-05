@@ -70,12 +70,14 @@ Ikomia Studio offers a friendly UI with the same features as the API.
     - stabilityai/stable-diffusion-2-1-base
     - stabilityai/stable-diffusion-2-1
     - stabilityai/stable-diffusion-xl-base-1.0
-    - stabilityai/sdxl-turbo
-- **prompt** (str): Input prompt.
+    - stabilityai/sdxl-turbo: **requires Torch >= 1.13, by default it will not work on Python < 3.10**
+- **prompt** (str): Text prompt to guide the image generation.
 - **negative_prompt** (str, *optional*): The prompt not to guide the image generation. Ignored when not using guidance (i.e., ignored if `guidance_scale` is less than `1`).
-- **num_inference_steps** (int) - default '50': Number of denoising steps (minimum: 1; maximum: 500).
-- **guidance_scale** (float) - default '7.5': Scale for classifier-free guidance (minimum: 1; maximum: 20).
+- **num_inference_steps** (int) - default '50': Number of denoising steps (minimum: 1; maximum: 500). For 'sdxl-turbo' we recommend using between 1 and 4 steps.
+- **guidance_scale** (float) - default '7.5': Scale for classifier-free guidance (minimum: 1; maximum: 20). For 'sdxl-turbo' guidance scale will be updated to 0.
 - **seed** (int) - default '-1': Seed value. '-1' generates a random number between 0 and 191965535.
+- **width** (int) - default '512': Output width. If not divisible by 8 it will be automatically modified to a multiple of 8.
+- **height** (int) - default '512': Output height. If not divisible by 8 it will be automatically modified to a multiple of 8.
 - **use_refiner** (bool) - default 'False': Further process the output of the base model (SDXL) with a refinement model specialized for the final denoising steps. 
 
 
@@ -95,11 +97,13 @@ algo.set_parameters({
     'guidance_scale': '7.5',
     'negative_prompt': 'low resolution',
     'num_inference_steps': '50',
+    'width': '1024',
+    'height': '1024',
     'seed': '1981651',
     'use_refiner': 'False'
 })
 
-# Run directly on your image
+# Run
 wf.run()
 
 # Display the image
@@ -111,7 +115,6 @@ display(algo.get_output(0).get_image())
 Every algorithm produces specific outputs, yet they can be explored them the same way using the Ikomia API. For a more in-depth understanding of managing algorithm outputs, please refer to the [documentation](https://ikomia-dev.github.io/python-api-documentation/advanced_guide/IO_management.html).
 
 ```python
-import ikomia
 from ikomia.dataprocess.workflow import Workflow
 
 # Init your workflow

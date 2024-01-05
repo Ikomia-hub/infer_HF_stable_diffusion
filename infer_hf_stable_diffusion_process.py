@@ -42,6 +42,8 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         self.num_inference_steps = 50
         self.seed = -1
         self.use_refiner = False
+        self.width = 512
+        self.height = 512
         self.update = False
 
     def set_values(self, param_map):
@@ -55,6 +57,8 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         self.seed = int(param_map["seed"])
         self.num_inference_steps = int(param_map["num_inference_steps"])
         self.use_refiner = utils.strtobool(param_map["use_refiner"])
+        self.width = int(param_map["width"])
+        self.height = int(param_map["height"])
         self.update = True
 
     def get_values(self):
@@ -69,6 +73,8 @@ class InferHfStableDiffusionParam(core.CWorkflowTaskParam):
         param_map["num_inference_steps"] = str(self.num_inference_steps)
         param_map["seed"] = str(self.seed)
         param_map["use_refiner"] = str(self.use_refiner)
+        param_map["width"] = str(self.width)
+        param_map["height"] = str(self.height)
         return param_map
 
 # --------------------
@@ -180,11 +186,20 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                 # Enable sliced attention computation
                 self.pipe.enable_attention_slicing()
 
+        if param.width % 8 != 0:
+            param.width = param.width // 8 * 8
+            print("Updating width to {} to be a multiple of 8".format(param.width))
+        if param.height % 8 != 0:
+            param.height = param.height // 8 * 8
+            print("Updating height to {} to be a multiple of 8".format(param.height))
+
         with torch.no_grad():
             if param.model_name in self.xl_models:
                 # Inference xl
                 if param.model_name == 'stabilityai/sdxl-turbo':
-                  param.guidance_scale = 0.0
+                    param.guidance_scale = 0.0
+                    if param.num_inference_steps > 4:
+                        print('For sdxl-turbo we recommend using between 1 and 4 steps.')
                 result = self.pipe(
                             prompt = param.prompt,
                             output_type = "pil",
@@ -193,6 +208,8 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                             guidance_scale = param.guidance_scale,
                             negative_prompt = param.negative_prompt,
                             num_inference_steps = param.num_inference_steps,
+                            width=param.width,
+                            height=param.height
                             ).images
 
                 if param.use_refiner:
@@ -208,6 +225,8 @@ class InferHfStableDiffusion(core.CWorkflowTask):
                                 negative_prompt = param.negative_prompt,
                                 generator = self.generator,
                                 num_inference_steps = param.num_inference_steps,
+                                width=param.width,
+                                height=param.height
                                 ).images
 
         print(f"Prompt:\t{param.prompt}\nSeed:\t{self.seed}")
